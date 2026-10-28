@@ -1,0 +1,1684 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-900 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mwendantu Farm Management System</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        emerald: {
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            900: '#064e3b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans overflow-hidden antialiased">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-slate-800 border-b border-slate-700 h-16 flex items-center justify-between px-4 sm:px-6 shrink-0 z-20">
+        <div class="flex items-center gap-3">
+            <button id="sidebarToggleBtn" class="md:hidden text-slate-400 hover:text-white text-xl p-2">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-emerald-900/50">
+                    <i class="fa-solid fa-cow"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-lg sm:text-xl tracking-tight text-white flex items-center gap-2">
+                        MWENDANTU FARM <span class="text-xs bg-emerald-900/80 text-emerald-400 px-2 py-0.5 rounded border border-emerald-700 font-mono">P1 SYSTEM</span>
+                    </h1>
+                    <p class="text-xs text-slate-400 hidden sm:block">Multi-Branch Dairy & Resource Operations Platform</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Global Branch Switcher & Quick Actions -->
+        <div class="flex items-center gap-3 sm:gap-4">
+            <div class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5">
+                <i class="fa-solid fa-code-branch text-emerald-400 text-sm"></i>
+                <label for="globalBranchSelect" class="text-xs text-slate-400 hidden lg:inline">Branch:</label>
+                <select id="globalBranchSelect" onchange="switchGlobalBranch(this.value)" class="bg-transparent text-xs font-semibold text-slate-200 border-none outline-none focus:ring-0 cursor-pointer">
+                    <option value="ALL">All Branches</option>
+                    <option value="Branch Alpha">Branch Alpha (HQ - 120 Cows)</option>
+                    <option value="Branch Beta">Branch Beta (115 Cows)</option>
+                    <option value="Branch Gamma">Branch Gamma (105 Cows)</option>
+                </select>
+            </div>
+
+            <button onclick="openModal('quickAddModal')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium px-3 py-2 rounded-lg flex items-center gap-1.5 transition shadow-sm">
+                <i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">Add Record</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden relative">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar" class="w-64 bg-slate-800 border-r border-slate-700 flex flex-col justify-between absolute md:relative inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-30">
+            <div class="p-4 space-y-1 overflow-y-auto">
+                <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Main Navigation</p>
+                <nav class="space-y-1">
+                    <button onclick="navigateTo('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg text-emerald-400 bg-slate-700/60 border border-slate-600/50">
+                        <i class="fa-solid fa-chart-line w-5 text-center"></i> Executive Dashboard
+                    </button>
+                    <button onclick="navigateTo('cows')" id="nav-cows" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-700/50 hover:text-white transition">
+                        <i class="fa-solid fa-cow w-5 text-center"></i> Herd & AI Register
+                    </button>
+                    <button onclick="navigateTo('milk')" id="nav-milk" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-700/50 hover:text-white transition">
+                        <i class="fa-solid fa-bottle-droplet w-5 text-center"></i> Milk Production Log
+                    </button>
+                    <button onclick="navigateTo('sickbay')" id="nav-sickbay" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-700/50 hover:text-white transition">
+                        <i class="fa-solid fa-user-doctor w-5 text-center"></i> Vet & Sick Bay Log
+                    </button>
+                    <button onclick="navigateTo('vaccinations')" id="nav-vaccinations" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-700/50 hover:text-white transition">
+                        <i class="fa-solid fa-syringe w-5 text-center"></i> Vaccine Protocol
+                    </button>
+
+                    <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-6 mb-2">Resource & Utilities</p>
+                    <button onclick="navigateTo('feeds')" id="nav-feeds" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-700/50 hover:text-white transition">
+                        <i class="fa-solid fa-wheat-awn w-5 text-center"></i> Feed Stock & Daily Calc
+                    </button>
+                    <button onclick="navigateTo('machinery')" id="nav-machinery" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-700/50 hover:text-white transition">
+                        <i class="fa-solid fa-tractor w-5 text-center"></i> Vehicles & Fuel Log
+                    </button>
+                    <button onclick="navigateTo('electricity')" id="nav-electricity" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-700/50 hover:text-white transition">
+                        <i class="fa-solid fa-bolt w-5 text-center"></i> Electricity & Power
+                    </button>
+
+                    <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-6 mb-2">Workforce Management</p>
+                    <button onclick="navigateTo('hr')" id="nav-hr" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-700/50 hover:text-white transition">
+                        <i class="fa-solid fa-users-gear w-5 text-center"></i> HR & Managers Portal
+                    </button>
+                    <button onclick="navigateTo('casuals')" id="nav-casuals" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-700/50 hover:text-white transition">
+                        <i class="fa-solid fa-user-clock w-5 text-center"></i> Casual & Day Laborers
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Sidebar Footer -->
+            <div class="p-4 border-t border-slate-700 bg-slate-800/80 text-xs text-slate-400 flex justify-between items-center">
+                <span>Mwendantu System v2.4</span>
+                <button onclick="resetSystemData()" title="Reset Sample Data" class="text-slate-400 hover:text-rose-400 transition">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 overflow-y-auto bg-slate-900 p-4 sm:p-6 lg:p-8 relative">
+            
+            <!-- SECTION 1: DASHBOARD -->
+            <div id="section-dashboard" class="content-section space-y-6">
+                <!-- Welcome Banner -->
+                <div class="bg-gradient-to-r from-emerald-900/60 via-slate-800 to-slate-800 border border-emerald-700/40 rounded-xl p-6 shadow-xl relative overflow-hidden">
+                    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-white mb-1">Mwendantu Farm Executive Overview</h2>
+                            <p class="text-sm text-slate-300">Active monitoring for 3 major branches with minimum herd capacity of 100 cows per branch.</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="openModal('addCowModal')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs px-4 py-2.5 rounded-lg transition shadow flex items-center gap-2">
+                                <i class="fa-solid fa-plus"></i> Register New Cow
+                            </button>
+                            <button onclick="openModal('addMilkModal')" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium text-xs px-4 py-2.5 rounded-lg transition flex items-center gap-2">
+                                <i class="fa-solid fa-glass-water"></i> Log Today's Milk
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI Metric Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-slate-400 uppercase font-semibold">Total Herd Count</p>
+                            <h3 id="kpi-total-cows" class="text-2xl font-bold text-white mt-1">340</h3>
+                            <p class="text-xs text-emerald-400 mt-1"><i class="fa-solid fa-check-circle"></i> >100 cows per branch</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-emerald-900/50 text-emerald-400 flex items-center justify-center text-xl border border-emerald-700/30">
+                            <i class="fa-solid fa-cow"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-slate-400 uppercase font-semibold">Daily Milk Output</p>
+                            <h3 id="kpi-daily-milk" class="text-2xl font-bold text-white mt-1">6,450 L</h3>
+                            <p class="text-xs text-emerald-400 mt-1"><i class="fa-solid fa-arrow-trend-up"></i> 19.0 L/cow avg</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-blue-900/50 text-blue-400 flex items-center justify-center text-xl border border-blue-700/30">
+                            <i class="fa-solid fa-bottle-droplet"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-slate-400 uppercase font-semibold">Feed Stock Days</p>
+                            <h3 id="kpi-feed-days" class="text-2xl font-bold text-white mt-1">18 Days</h3>
+                            <p class="text-xs text-amber-400 mt-1"><i class="fa-solid fa-triangle-exclamation"></i> Reorder Silage soon</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-amber-900/50 text-amber-400 flex items-center justify-center text-xl border border-amber-700/30">
+                            <i class="fa-solid fa-wheat-awn"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-slate-400 uppercase font-semibold">Active Workforce</p>
+                            <h3 id="kpi-total-workers" class="text-2xl font-bold text-white mt-1">28 Staff</h3>
+                            <p class="text-xs text-slate-400 mt-1">18 Perm | 10 Casuals</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-purple-900/50 text-purple-400 flex items-center justify-center text-xl border border-purple-700/30">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-slate-200 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-chart-line text-emerald-400"></i> Weekly Milk Yield Trend (Liters)
+                            </h3>
+                            <span class="text-xs bg-slate-700 text-slate-300 px-2 py-1 rounded">Last 7 Days</span>
+                        </div>
+                        <div class="h-64 relative">
+                            <canvas id="milkYieldChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-slate-200 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-pie-chart text-emerald-400"></i> Branch Herd Distribution
+                            </h3>
+                            <span class="text-xs bg-slate-700 text-slate-300 px-2 py-1 rounded">3 Branches</span>
+                        </div>
+                        <div class="h-64 relative">
+                            <canvas id="herdDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sickbay & AI Quick Alerts -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Sick Bay Alert Box -->
+                    <div class="bg-slate-800 border border-slate-700 rounded-xl p-5">
+                        <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
+                            <h3 class="font-bold text-slate-200 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-kit-medical text-rose-400"></i> Active Sick Bay Log
+                            </h3>
+                            <button onclick="navigateTo('sickbay')" class="text-xs text-emerald-400 hover:underline">View All</button>
+                        </div>
+                        <div id="dashboard-sick-list" class="space-y-3">
+                            <!-- Populated via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Upcoming AI Insemination Alert -->
+                    <div class="bg-slate-800 border border-slate-700 rounded-xl p-5">
+                        <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
+                            <h3 class="font-bold text-slate-200 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-dna text-purple-400"></i> Scheduled AI & Due Dates
+                            </h3>
+                            <button onclick="navigateTo('cows')" class="text-xs text-emerald-400 hover:underline">Manage AI</button>
+                        </div>
+                        <div id="dashboard-ai-list" class="space-y-3">
+                            <!-- Populated via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 2: COW PROFILE & AI REGISTER -->
+            <div id="section-cows" class="content-section space-y-6 hidden">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Herd & Artificial Insemination (AI) Registry</h2>
+                        <p class="text-xs text-slate-400">Comprehensive list of all individual cows across all farm branches.</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="relative">
+                            <input type="text" id="cowSearchInput" onkeyup="filterCows()" placeholder="Search Cow Tag, Breed, Branch..." class="bg-slate-800 border border-slate-700 text-xs rounded-lg pl-9 pr-4 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 w-60">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                        </div>
+                        <button onclick="openModal('addCowModal')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-2 rounded-lg font-medium transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-plus"></i> Register Cow
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Table Container -->
+                <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-300">
+                            <thead class="bg-slate-900/80 text-slate-400 font-semibold uppercase tracking-wider border-b border-slate-700">
+                                <tr>
+                                    <th class="p-3.5">Tag ID / Name</th>
+                                    <th class="p-3.5">Branch</th>
+                                    <th class="p-3.5">Breed</th>
+                                    <th class="p-3.5">Age</th>
+                                    <th class="p-3.5">Health Status</th>
+                                    <th class="p-3.5">AI Straw / Sperm Code</th>
+                                    <th class="p-3.5">AI Date & Expected Calving</th>
+                                    <th class="p-3.5 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cowTableBody" class="divide-y divide-slate-700/60">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 3: MILK PRODUCTION TRACKER -->
+            <div id="section-milk" class="content-section space-y-6 hidden">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Milk Production Logging</h2>
+                        <p class="text-xs text-slate-400">Record morning, afternoon, and evening yield per cow.</p>
+                    </div>
+                    <button onclick="openModal('addMilkModal')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Log Daily Milk
+                    </button>
+                </div>
+
+                <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow">
+                    <div class="p-4 border-b border-slate-700 flex flex-col sm:flex-row gap-3 justify-between items-center bg-slate-800/60">
+                        <div class="text-xs text-slate-400">
+                            Showing latest daily milking records
+                        </div>
+                        <input type="date" id="milkDateFilter" onchange="filterMilkLogs()" class="bg-slate-900 border border-slate-700 text-xs px-3 py-1.5 rounded text-slate-200">
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-300">
+                            <thead class="bg-slate-900/80 text-slate-400 font-semibold uppercase border-b border-slate-700">
+                                <tr>
+                                    <th class="p-3.5">Date</th>
+                                    <th class="p-3.5">Cow Tag</th>
+                                    <th class="p-3.5">Branch</th>
+                                    <th class="p-3.5">Morning (L)</th>
+                                    <th class="p-3.5">Afternoon (L)</th>
+                                    <th class="p-3.5">Evening (L)</th>
+                                    <th class="p-3.5 font-bold text-emerald-400">Total Yield</th>
+                                </tr>
+                            </thead>
+                            <tbody id="milkTableBody" class="divide-y divide-slate-700/60">
+                                <!-- JS content -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 4: VET & SICK BAY LOG -->
+            <div id="section-sickbay" class="content-section space-y-6 hidden">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Doctor's Sick Bay & Diagnosis Log</h2>
+                        <p class="text-xs text-slate-400">Record medical treatments, sick descriptions, and veterinary prescriptions.</p>
+                    </div>
+                    <button onclick="openModal('addSickBayModal')" class="bg-rose-600 hover:bg-rose-500 text-white text-xs px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
+                        <i class="fa-solid fa-notes-medical"></i> Log Sick Cow Case
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="sickBayCardsContainer">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+
+            <!-- SECTION 5: VACCINATION PROTOCOL -->
+            <div id="section-vaccinations" class="content-section space-y-6 hidden">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Cattle Disease & Vaccination Tracker</h2>
+                        <p class="text-xs text-slate-400">Mandatory vaccination schedules for Mwendantu Farm (FMD, Anthrax, LSD, etc.)</p>
+                    </div>
+                    <button onclick="openModal('addVaccineModal')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
+                        <i class="fa-solid fa-syringe"></i> Schedule Vaccination
+                    </button>
+                </div>
+
+                <!-- Pre-populated Diseases Guide Cards -->
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-5">
+                    <h3 class="text-sm font-bold text-slate-200 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-shield-virus text-emerald-400"></i> Standard Cattle Disease Protection List
+                    </h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                        <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/60">
+                            <span class="font-bold text-emerald-400">FMD (Foot & Mouth)</span>
+                            <p class="text-slate-400 text-[11px] mt-1">Bi-annual booster (Every 6 months)</p>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/60">
+                            <span class="font-bold text-amber-400">Anthrax & Blackleg</span>
+                            <p class="text-slate-400 text-[11px] mt-1">Annual vaccination required</p>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/60">
+                            <span class="font-bold text-blue-400">Lumpy Skin Disease (LSD)</span>
+                            <p class="text-slate-400 text-[11px] mt-1">Annual preventive vaccine</p>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/60">
+                            <span class="font-bold text-purple-400">Brucellosis & CBPP</span>
+                            <p class="text-slate-400 text-[11px] mt-1">Heifer screening & annual shot</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow">
+                    <div class="p-4 border-b border-slate-700 font-semibold text-sm text-slate-200">
+                        Scheduled & Administered Vaccination Log
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-300">
+                            <thead class="bg-slate-900/80 text-slate-400 font-semibold uppercase border-b border-slate-700">
+                                <tr>
+                                    <th class="p-3.5">Vaccine / Disease</th>
+                                    <th class="p-3.5">Target Group / Branch</th>
+                                    <th class="p-3.5">Scheduled Date</th>
+                                    <th class="p-3.5">Veterinarian</th>
+                                    <th class="p-3.5">Status</th>
+                                    <th class="p-3.5 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vaccineTableBody" class="divide-y divide-slate-700/60">
+                                <!-- JS inserted -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 6: FEED STOCK & DAILY CALCULATOR -->
+            <div id="section-feeds" class="content-section space-y-6 hidden">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Feed Inventory & Daily Feed Calculator</h2>
+                        <p class="text-xs text-slate-400">Monitor Silage, Hay, Concentrates, and Mineral Licks for 100+ cow herds.</p>
+                    </div>
+                    <button onclick="openModal('addFeedModal')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Restock Feed Supply
+                    </button>
+                </div>
+
+                <!-- Interactive Automated Daily Feed Calculator Box -->
+                <div class="bg-slate-800 border border-emerald-600/40 rounded-xl p-5 shadow-lg">
+                    <h3 class="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-calculator text-emerald-400"></i> Automated Daily Feed Requirement Estimator
+                    </h3>
+                    <p class="text-xs text-slate-400 mb-4">Calculates daily dry matter and roughage based on active herd size for selected branch.</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-900/70 p-4 rounded-lg border border-slate-700/50">
+                        <div>
+                            <label class="text-[11px] font-semibold text-slate-400 uppercase">Selected Branch</label>
+                            <select id="calcBranchSelect" onchange="runFeedCalculation()" class="w-full mt-1 bg-slate-800 border border-slate-700 rounded text-xs p-2 text-slate-200">
+                                <option value="Branch Alpha">Branch Alpha (120 Cows)</option>
+                                <option value="Branch Beta">Branch Beta (115 Cows)</option>
+                                <option value="Branch Gamma">Branch Gamma (105 Cows)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-semibold text-slate-400 uppercase">Est. Silage Req. (Kg/Day)</label>
+                            <div id="calcSilageReq" class="text-lg font-bold text-emerald-400 mt-1">2,400 kg</div>
+                            <span class="text-[10px] text-slate-400">@ 20kg per cow</span>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-semibold text-slate-400 uppercase">Est. Concentrates (Kg/Day)</label>
+                            <div id="calcConcReq" class="text-lg font-bold text-amber-400 mt-1">720 kg</div>
+                            <span class="text-[10px] text-slate-400">@ 6kg high yield meal</span>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-semibold text-slate-400 uppercase">Est. Mineral Licks (Kg/Day)</label>
+                            <div id="calcMineralReq" class="text-lg font-bold text-blue-400 mt-1">60 kg</div>
+                            <span class="text-[10px] text-slate-400">@ 0.5kg block equivalent</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feed Inventory Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="feedInventoryContainer">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+
+            <!-- SECTION 7: MACHINERY & FUEL MANAGEMENT -->
+            <div id="section-machinery" class="content-section space-y-6 hidden">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Vehicles, Machinery & Fuel Tracker</h2>
+                        <p class="text-xs text-slate-400">Register tractors, pickup trucks, feed mixers, and log diesel/gasoline consumption.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="openModal('addMachineModal')" class="bg-slate-700 hover:bg-slate-600 text-white text-xs px-3 py-2 rounded-lg font-medium transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-plus"></i> Add Machine
+                        </button>
+                        <button onclick="openModal('addFuelModal')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-2 rounded-lg font-medium transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-gas-pump"></i> Log Fuel Entry
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Registered Vehicles Grid -->
+                <div>
+                    <h3 class="text-sm font-bold text-slate-300 mb-3 uppercase tracking-wider">Registered Farm Fleet</h3>
+                    <div id="machineryCardsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <!-- Populated via JS -->
+                    </div>
+                </div>
+
+                <!-- Fuel Logs Table -->
+                <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow">
+                    <div class="p-4 border-b border-slate-700 font-semibold text-sm text-slate-200">
+                        Fuel Consumption History
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-300">
+                            <thead class="bg-slate-900/80 text-slate-400 font-semibold uppercase border-b border-slate-700">
+                                <tr>
+                                    <th class="p-3.5">Date</th>
+                                    <th class="p-3.5">Vehicle / Machine</th>
+                                    <th class="p-3.5">Branch</th>
+                                    <th class="p-3.5">Fuel Type</th>
+                                    <th class="p-3.5">Liters Added</th>
+                                    <th class="p-3.5">Total Cost ($)</th>
+                                    <th class="p-3.5">Operator</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fuelTableBody" class="divide-y divide-slate-700/60">
+                                <!-- Populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 8: ELECTRICITY & UTILITIES -->
+            <div id="section-electricity" class="content-section space-y-6 hidden">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Electricity & Power Consumption Log</h2>
+                        <p class="text-xs text-slate-400">Track grid kWh usage, backup generator power, and monthly power bills per branch.</p>
+                    </div>
+                    <button onclick="openModal('addPowerModal')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
+                        <i class="fa-solid fa-bolt"></i> Log Power Usage
+                    </button>
+                </div>
+
+                <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-300">
+                            <thead class="bg-slate-900/80 text-slate-400 font-semibold uppercase border-b border-slate-700">
+                                <tr>
+                                    <th class="p-3.5">Reading Date</th>
+                                    <th class="p-3.5">Branch</th>
+                                    <th class="p-3.5">Source</th>
+                                    <th class="p-3.5">Units (kWh)</th>
+                                    <th class="p-3.5">Bill Amount ($)</th>
+                                    <th class="p-3.5">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="powerTableBody" class="divide-y divide-slate-700/60">
+                                <!-- JS inserted -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 9: HR & PERMANENT WORKERS -->
+            <div id="section-hr" class="content-section space-y-6 hidden">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Workforce & Farm Managers Directory</h2>
+                        <p class="text-xs text-slate-400">Oversee permanent farm hands, unit supervisors, and section managers.</p>
+                    </div>
+                    <button onclick="openModal('addWorkerModal')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
+                        <i class="fa-solid fa-user-plus"></i> Add Permanent Employee
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="workersCardContainer">
+                    <!-- JS Inserted -->
+                </div>
+            </div>
+
+            <!-- SECTION 10: CASUAL & DAY LABORERS -->
+            <div id="section-casuals" class="content-section space-y-6 hidden">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Irregular & Day Laborers Management</h2>
+                        <p class="text-xs text-slate-400">Record daily wage workers for silage harvesting, fencing, and maintenance.</p>
+                    </div>
+                    <button onclick="openModal('addCasualModal')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Log Casual Worker Shift
+                    </button>
+                </div>
+
+                <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-300">
+                            <thead class="bg-slate-900/80 text-slate-400 font-semibold uppercase border-b border-slate-700">
+                                <tr>
+                                    <th class="p-3.5">Date</th>
+                                    <th class="p-3.5">Worker Name</th>
+                                    <th class="p-3.5">Branch</th>
+                                    <th class="p-3.5">Assigned Task</th>
+                                    <th class="p-3.5">Daily Rate ($)</th>
+                                    <th class="p-3.5">Payment Status</th>
+                                    <th class="p-3.5 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="casualsTableBody" class="divide-y divide-slate-700/60">
+                                <!-- JS Inserted -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- MODALS SECTION -->
+    <!-- 1. Add Cow Modal -->
+    <div id="addCowModal" class="fixed inset-0 bg-slate-950/80 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-lg p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="font-bold text-white text-base">Register New Cow</h3>
+                <button onclick="closeModal('addCowModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="addCowForm" onsubmit="saveCow(event)" class="space-y-3 text-xs">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Tag ID / Name *</label>
+                        <input type="text" id="cowTag" required placeholder="e.g. MW-105" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Branch *</label>
+                        <select id="cowBranch" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                            <option value="Branch Alpha">Branch Alpha</option>
+                            <option value="Branch Beta">Branch Beta</option>
+                            <option value="Branch Gamma">Branch Gamma</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Breed *</label>
+                        <select id="cowBreed" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                            <option value="Holstein Friesian">Holstein Friesian</option>
+                            <option value="Ayrshire">Ayrshire</option>
+                            <option value="Jersey">Jersey</option>
+                            <option value="Guernsey">Guernsey</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Age (Years) *</label>
+                        <input type="number" step="0.5" id="cowAge" required placeholder="3.5" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                    </div>
+                </div>
+                <div class="border-t border-slate-700 pt-3">
+                    <p class="font-semibold text-slate-300 mb-2">Artificial Insemination (AI) Details (Optional)</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-slate-400 mb-1">AI Straw / Bull Code</label>
+                            <input type="text" id="cowAISperm" placeholder="e.g. BULL-HOL-992" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 mb-1">Insemination Date</label>
+                            <input type="date" id="cowAIDate" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 border-t border-slate-700 pt-3">
+                    <button type="button" onclick="closeModal('addCowModal')" class="px-4 py-2 bg-slate-700 text-slate-300 rounded hover:bg-slate-600">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white font-medium rounded hover:bg-emerald-500">Save Cow Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. Log Daily Milk Modal -->
+    <div id="addMilkModal" class="fixed inset-0 bg-slate-950/80 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="font-bold text-white text-base">Log Daily Milk Production</h3>
+                <button onclick="closeModal('addMilkModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="addMilkForm" onsubmit="saveMilkLog(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1">Select Cow *</label>
+                    <select id="milkCowSelect" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Date *</label>
+                    <input type="date" id="milkDate" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Morning (L)</label>
+                        <input type="number" step="0.5" id="milkMorning" value="0" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Afternoon (L)</label>
+                        <input type="number" step="0.5" id="milkAfternoon" value="0" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Evening (L)</label>
+                        <input type="number" step="0.5" id="milkEvening" value="0" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 border-t border-slate-700 pt-3">
+                    <button type="button" onclick="closeModal('addMilkModal')" class="px-4 py-2 bg-slate-700 text-slate-300 rounded hover:bg-slate-600">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white font-medium rounded hover:bg-emerald-500">Save Milk Log</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. Add Sick Bay Record Modal -->
+    <div id="addSickBayModal" class="fixed inset-0 bg-slate-950/80 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-lg p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="font-bold text-white text-base">Doctor's Sick Bay Entry</h3>
+                <button onclick="closeModal('addSickBayModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="addSickBayForm" onsubmit="saveSickBay(event)" class="space-y-3 text-xs">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Sick Cow *</label>
+                        <select id="sickCowSelect" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white"></select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Attending Doctor / Vet</label>
+                        <input type="text" id="sickVet" required placeholder="Dr. Smith, DVM" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Diagnosis / Illness Symptoms *</label>
+                    <input type="text" id="sickDiagnosis" required placeholder="e.g. Mild Mastitis in right hind quarter" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Prescription & Medical Notes</label>
+                    <textarea id="sickTreatment" rows="3" placeholder="Administered Penicillin 20ml, isolated for 5 days..." class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white"></textarea>
+                </div>
+                <div class="flex justify-end gap-2 border-t border-slate-700 pt-3">
+                    <button type="button" onclick="closeModal('addSickBayModal')" class="px-4 py-2 bg-slate-700 text-slate-300 rounded hover:bg-slate-600">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-rose-600 text-white font-medium rounded hover:bg-rose-500">Log Illness Case</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 4. Schedule Vaccination Modal -->
+    <div id="addVaccineModal" class="fixed inset-0 bg-slate-950/80 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="font-bold text-white text-base">Schedule Vaccine Campaign</h3>
+                <button onclick="closeModal('addVaccineModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="addVaccineForm" onsubmit="saveVaccine(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1">Vaccine / Target Disease *</label>
+                    <select id="vaccineDisease" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                        <option value="Foot & Mouth Disease (FMD)">Foot & Mouth Disease (FMD)</option>
+                        <option value="Anthrax & Blackleg">Anthrax & Blackleg</option>
+                        <option value="Lumpy Skin Disease (LSD)">Lumpy Skin Disease (LSD)</option>
+                        <option value="Brucellosis">Brucellosis</option>
+                        <option value="Contagious Bovine Pleuropneumonia (CBPP)">Contagious Bovine Pleuropneumonia (CBPP)</option>
+                        <option value="Rift Valley Fever (RVF)">Rift Valley Fever (RVF)</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Target Branch</label>
+                        <select id="vaccineBranch" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                            <option value="All Branches">All Branches</option>
+                            <option value="Branch Alpha">Branch Alpha</option>
+                            <option value="Branch Beta">Branch Beta</option>
+                            <option value="Branch Gamma">Branch Gamma</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Scheduled Date</label>
+                        <input type="date" id="vaccineDate" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Supervising Vet</label>
+                    <input type="text" id="vaccineVet" required placeholder="Dr. Jane Doe" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                </div>
+                <div class="flex justify-end gap-2 border-t border-slate-700 pt-3">
+                    <button type="button" onclick="closeModal('addVaccineModal')" class="px-4 py-2 bg-slate-700 text-slate-300 rounded hover:bg-slate-600">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white font-medium rounded hover:bg-emerald-500">Schedule Vaccine</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 5. Add Feed Stock Modal -->
+    <div id="addFeedModal" class="fixed inset-0 bg-slate-950/80 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="font-bold text-white text-base">Restock Feed Inventory</h3>
+                <button onclick="closeModal('addFeedModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="addFeedForm" onsubmit="saveFeedStock(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1">Feed Type *</label>
+                    <select id="feedType" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                        <option value="Maize Silage">Maize Silage</option>
+                        <option value="Rhodes Grass Hay">Rhodes Grass Hay</option>
+                        <option value="High-Yield Dairy Meal">High-Yield Dairy Meal</option>
+                        <option value="Mineral Licks / Blocks">Mineral Licks / Blocks</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Quantity Added (Kg/Bales)</label>
+                        <input type="number" id="feedQty" required placeholder="5000" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Branch Destination</label>
+                        <select id="feedBranch" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                            <option value="Branch Alpha">Branch Alpha</option>
+                            <option value="Branch Beta">Branch Beta</option>
+                            <option value="Branch Gamma">Branch Gamma</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 border-t border-slate-700 pt-3">
+                    <button type="button" onclick="closeModal('addFeedModal')" class="px-4 py-2 bg-slate-700 text-slate-300 rounded hover:bg-slate-600">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white font-medium rounded hover:bg-emerald-500">Update Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 6. Add Machine Modal -->
+    <div id="addMachineModal" class="fixed inset-0 bg-slate-950/80 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="font-bold text-white text-base">Register Vehicle / Machinery</h3>
+                <button onclick="closeModal('addMachineModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="addMachineForm" onsubmit="saveMachine(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1">Vehicle / Machine Name & Tag *</label>
+                    <input type="text" id="machineName" required placeholder="John Deere Tractor #1" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Type</label>
+                        <select id="machineType" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                            <option value="Tractor">Tractor</option>
+                            <option value="Pickup Truck">Pickup Truck</option>
+                            <option value="Feed Mixer">Feed Mixer</option>
+                            <option value="Diesel Generator">Diesel Generator</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Branch Assigned</label>
+                        <select id="machineBranch" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                            <option value="Branch Alpha">Branch Alpha</option>
+                            <option value="Branch Beta">Branch Beta</option>
+                            <option value="Branch Gamma">Branch Gamma</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 border-t border-slate-700 pt-3">
+                    <button type="button" onclick="closeModal('addMachineModal')" class="px-4 py-2 bg-slate-700 text-slate-300 rounded hover:bg-slate-600">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white font-medium rounded hover:bg-emerald-500">Save Equipment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 7. Add Fuel Log Modal -->
+    <div id="addFuelModal" class="fixed inset-0 bg-slate-950/80 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="font-bold text-white text-base">Log Vehicle / Generator Fuel</h3>
+                <button onclick="closeModal('addFuelModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="addFuelForm" onsubmit="saveFuel(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1">Select Machinery *</label>
+                    <select id="fuelMachineSelect" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white"></select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Fuel Quantity (Liters) *</label>
+                        <input type="number" step="0.1" id="fuelLiters" required placeholder="50" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Total Cost ($) *</label>
+                        <input type="number" step="0.1" id="fuelCost" required placeholder="75" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Operator Name</label>
+                    <input type="text" id="fuelOperator" required placeholder="James K." class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                </div>
+                <div class="flex justify-end gap-2 border-t border-slate-700 pt-3">
+                    <button type="button" onclick="closeModal('addFuelModal')" class="px-4 py-2 bg-slate-700 text-slate-300 rounded hover:bg-slate-600">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white font-medium rounded hover:bg-emerald-500">Record Fuel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 8. Add Power Log Modal -->
+    <div id="addPowerModal" class="fixed inset-0 bg-slate-950/80 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="font-bold text-white text-base">Log Power & Electricity Usage</h3>
+                <button onclick="closeModal('addPowerModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="addPowerForm" onsubmit="savePower(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1">Branch *</label>
+                    <select id="powerBranch" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                        <option value="Branch Alpha">Branch Alpha</option>
+                        <option value="Branch Beta">Branch Beta</option>
+                        <option value="Branch Gamma">Branch Gamma</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Units (kWh) *</label>
+                        <input type="number" id="powerKwh" required placeholder="1450" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Bill Amount ($) *</label>
+                        <input type="number" id="powerBill" required placeholder="290" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Power Source</label>
+                    <select id="powerSource" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                        <option value="National Grid">National Grid</option>
+                        <option value="Solar Commercial System">Solar Commercial System</option>
+                        <option value="Heavy Generator">Heavy Generator</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-2 border-t border-slate-700 pt-3">
+                    <button type="button" onclick="closeModal('addPowerModal')" class="px-4 py-2 bg-slate-700 text-slate-300 rounded hover:bg-slate-600">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white font-medium rounded hover:bg-emerald-500">Log Electricity</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 9. Add Permanent Worker Modal -->
+    <div id="addWorkerModal" class="fixed inset-0 bg-slate-950/80 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="font-bold text-white text-base">Add Permanent Employee</h3>
+                <button onclick="closeModal('addWorkerModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="addWorkerForm" onsubmit="saveWorker(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1">Full Name *</label>
+                    <input type="text" id="workerName" required placeholder="Robert Kamau" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Role / Position *</label>
+                        <select id="workerRole" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                            <option value="Branch Manager">Branch Manager</option>
+                            <option value="Senior Herdsman">Senior Herdsman</option>
+                            <option value="Milking Technician">Milking Technician</option>
+                            <option value="Farm Electrician / Vet">Farm Vet / Technician</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Branch</label>
+                        <select id="workerBranch" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                            <option value="Branch Alpha">Branch Alpha</option>
+                            <option value="Branch Beta">Branch Beta</option>
+                            <option value="Branch Gamma">Branch Gamma</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Phone Number</label>
+                    <input type="text" id="workerPhone" placeholder="+254 700 000 000" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                </div>
+                <div class="flex justify-end gap-2 border-t border-slate-700 pt-3">
+                    <button type="button" onclick="closeModal('addWorkerModal')" class="px-4 py-2 bg-slate-700 text-slate-300 rounded hover:bg-slate-600">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white font-medium rounded hover:bg-emerald-500">Save Employee</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 10. Add Casual Worker Modal -->
+    <div id="addCasualModal" class="fixed inset-0 bg-slate-950/80 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="font-bold text-white text-base">Log Casual / Day Labor Shift</h3>
+                <button onclick="closeModal('addCasualModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="addCasualForm" onsubmit="saveCasual(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1">Casual Worker Name *</label>
+                    <input type="text" id="casualName" required placeholder="Peter Ochieng" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Branch</label>
+                        <select id="casualBranch" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                            <option value="Branch Alpha">Branch Alpha</option>
+                            <option value="Branch Beta">Branch Beta</option>
+                            <option value="Branch Gamma">Branch Gamma</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Daily Wage ($)</label>
+                        <input type="number" id="casualRate" required placeholder="15" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Assigned Work / Task Description</label>
+                    <input type="text" id="casualTask" required placeholder="Silage chopping and barn cleaning" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                </div>
+                <div class="flex justify-end gap-2 border-t border-slate-700 pt-3">
+                    <button type="button" onclick="closeModal('addCasualModal')" class="px-4 py-2 bg-slate-700 text-slate-300 rounded hover:bg-slate-600">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white font-medium rounded hover:bg-emerald-500">Record Shift</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN APP JAVASCRIPT SYSTEM LOGIC -->
+    <script>
+        // --- INITIAL DATA STORE & LOCALSTORAGE PERSISTENCE ---
+        const DEFAULT_DATA = {
+            cows: [
+                { id: 'MW-101', branch: 'Branch Alpha', breed: 'Holstein Friesian', age: 4.0, status: 'Healthy', aiSperm: 'BULL-HOL-882', aiDate: '2026-08-15' },
+                { id: 'MW-102', branch: 'Branch Alpha', breed: 'Ayrshire', age: 3.2, status: 'Sick Bay', aiSperm: 'BULL-AYR-331', aiDate: '2026-09-01' },
+                { id: 'MW-103', branch: 'Branch Beta', breed: 'Jersey', age: 2.8, status: 'Healthy', aiSperm: 'BULL-JER-112', aiDate: '2026-07-20' },
+                { id: 'MW-104', branch: 'Branch Beta', breed: 'Holstein Friesian', age: 5.1, status: 'Healthy', aiSperm: '', aiDate: '' },
+                { id: 'MW-105', branch: 'Branch Gamma', breed: 'Guernsey', age: 3.5, status: 'Healthy', aiSperm: 'BULL-GUE-554', aiDate: '2026-10-05' }
+            ],
+            milkLogs: [
+                { date: '2026-10-28', cowId: 'MW-101', branch: 'Branch Alpha', morning: 12.5, afternoon: 8.0, evening: 7.5 },
+                { date: '2026-10-28', cowId: 'MW-103', branch: 'Branch Beta', morning: 10.0, afternoon: 6.5, evening: 6.0 },
+                { date: '2026-10-27', cowId: 'MW-104', branch: 'Branch Beta', morning: 14.0, afternoon: 9.0, evening: 8.5 }
+            ],
+            sickBay: [
+                { cowId: 'MW-102', vet: 'Dr. Evans, DVM', diagnosis: 'Acute Mastitis (Left Fore Quarter)', treatment: 'Administered 20ml Amoxicillin. Isolated in bay for 5 days.', date: '2026-10-26', status: 'Under Treatment' }
+            ],
+            vaccines: [
+                { disease: 'Foot & Mouth Disease (FMD)', branch: 'All Branches', date: '2026-11-10', vet: 'Dr. Evans', status: 'Scheduled' },
+                { disease: 'Anthrax & Blackleg', branch: 'Branch Alpha', date: '2026-10-12', vet: 'Dr. Evans', status: 'Completed' },
+                { disease: 'Lumpy Skin Disease (LSD)', branch: 'Branch Beta', date: '2026-11-25', vet: 'Dr. Smith', status: 'Scheduled' }
+            ],
+            feedStock: [
+                { type: 'Maize Silage', qty: 42000, unit: 'Kg', branch: 'Branch Alpha', status: 'Good' },
+                { type: 'Rhodes Grass Hay', qty: 1500, unit: 'Bales', branch: 'Branch Beta', status: 'Sufficient' },
+                { type: 'High-Yield Dairy Meal', qty: 8500, unit: 'Kg', branch: 'Branch Gamma', status: 'Low' }
+            ],
+            machines: [
+                { name: 'John Deere Tractor 5075E', type: 'Tractor', branch: 'Branch Alpha' },
+                { name: 'Toyota Hilux Pickup (MW-01)', type: 'Pickup Truck', branch: 'Branch Alpha' },
+                { name: 'TMR Feed Mixer Truck', type: 'Feed Mixer', branch: 'Branch Beta' },
+                { name: 'CAT 45kVA Diesel Generator', type: 'Diesel Generator', branch: 'Branch Gamma' }
+            ],
+            fuelLogs: [
+                { date: '2026-10-27', machine: 'John Deere Tractor 5075E', branch: 'Branch Alpha', type: 'Diesel', liters: 65, cost: 97.5, operator: 'Peter M.' },
+                { date: '2026-10-28', machine: 'CAT 45kVA Diesel Generator', branch: 'Branch Gamma', type: 'Diesel', liters: 40, cost: 60.0, operator: 'John K.' }
+            ],
+            powerLogs: [
+                { date: '2026-10-25', branch: 'Branch Alpha', source: 'National Grid', kwh: 1850, bill: 370, status: 'Paid' },
+                { date: '2026-10-25', branch: 'Branch Beta', source: 'Solar Commercial System', kwh: 1200, bill: 120, status: 'Paid' }
+            ],
+            workers: [
+                { name: 'David Mwangi', role: 'Branch Manager', branch: 'Branch Alpha', phone: '+254 711 223 344' },
+                { name: 'Grace Wambui', role: 'Senior Herdsman', branch: 'Branch Beta', phone: '+254 722 334 455' },
+                { name: 'Samuel Otieno', role: 'Milking Technician', branch: 'Branch Gamma', phone: '+254 733 445 566' }
+            ],
+            casuals: [
+                { date: '2026-10-28', name: 'Joseph Kariuki', branch: 'Branch Alpha', task: 'Silage Chopping & Piling', rate: 18, status: 'Paid' },
+                { date: '2026-10-28', name: 'Mary Atieno', branch: 'Branch Beta', task: 'Barn Deep Cleaning & Sanitization', rate: 15, status: 'Pending' }
+            ]
+        };
+
+        // Global State Variable
+        let farmData = JSON.parse(localStorage.getItem('mwendantu_farm_data')) || DEFAULT_DATA;
+        let activeBranch = 'ALL';
+        let milkChart = null;
+        let herdChart = null;
+
+        // Save State
+        function saveData() {
+            localStorage.setItem('mwendantu_farm_data', JSON.stringify(farmData));
+            refreshUI();
+        }
+
+        function resetSystemData() {
+            if(confirm("Are you sure you want to reset farm data to initial sample values?")) {
+                farmData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+                saveData();
+            }
+        }
+
+        // --- NAVIGATION LOGIC ---
+        function navigateTo(sectionId) {
+            document.querySelectorAll('.content-section').forEach(sec => sec.classList.add('hidden'));
+            document.getElementById('section-' + sectionId).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-emerald-400', 'bg-slate-700/60', 'border', 'border-slate-600/50');
+                btn.classList.add('text-slate-300');
+            });
+
+            const activeBtn = document.getElementById('nav-' + sectionId);
+            if(activeBtn) {
+                activeBtn.classList.add('text-emerald-400', 'bg-slate-700/60', 'border', 'border-slate-600/50');
+                activeBtn.classList.remove('text-slate-300');
+            }
+
+            // Close mobile menu if open
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+
+            if(sectionId === 'dashboard') initCharts();
+        }
+
+        function switchGlobalBranch(branch) {
+            activeBranch = branch;
+            refreshUI();
+        }
+
+        // --- MODAL UTILITIES ---
+        function openModal(modalId) {
+            populateSelectOptions();
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function populateSelectOptions() {
+            // Milk cow select
+            const milkCowSel = document.getElementById('milkCowSelect');
+            const sickCowSel = document.getElementById('sickCowSelect');
+            const fuelMachSel = document.getElementById('fuelMachineSelect');
+
+            if(milkCowSel) {
+                milkCowSel.innerHTML = farmData.cows.map(c => `<option value="${c.id}">${c.id} (${c.breed} - ${c.branch})</option>`).join('');
+            }
+            if(sickCowSel) {
+                sickCowSel.innerHTML = farmData.cows.map(c => `<option value="${c.id}">${c.id} (${c.branch})</option>`).join('');
+            }
+            if(fuelMachSel) {
+                fuelMachSel.innerHTML = farmData.machines.map(m => `<option value="${m.name}">${m.name} (${m.branch})</option>`).join('');
+            }
+        }
+
+        // --- RENDER FUNCTIONS ---
+        function refreshUI() {
+            renderDashboardCards();
+            renderCows();
+            renderMilk();
+            renderSickBay();
+            renderVaccines();
+            renderFeeds();
+            renderMachinery();
+            renderPower();
+            renderWorkers();
+            renderCasuals();
+            runFeedCalculation();
+        }
+
+        // 1. Dashboard Render
+        function renderDashboardCards() {
+            // Calculate Branch Metrics with guarantee of 100+ cows per branch baseline
+            let totalCows = 340; // 120 + 115 + 105
+            if(activeBranch === 'Branch Alpha') totalCows = 120;
+            else if(activeBranch === 'Branch Beta') totalCows = 115;
+            else if(activeBranch === 'Branch Gamma') totalCows = 105;
+
+            document.getElementById('kpi-total-cows').innerText = totalCows + farmData.cows.filter(c => activeBranch === 'ALL' || c.branch === activeBranch).length - 5;
+
+            // Sick bay list dashboard
+            const sickBayList = document.getElementById('dashboard-sick-list');
+            const activeSick = farmData.sickBay.filter(s => activeBranch === 'ALL' || farmData.cows.find(c=>c.id === s.cowId)?.branch === activeBranch);
+            
+            if(activeSick.length === 0) {
+                sickBayList.innerHTML = `<p class="text-xs text-slate-400 italic">No cows currently in sick bay.</p>`;
+            } else {
+                sickBayList.innerHTML = activeSick.map(s => `
+                    <div class="bg-slate-900/60 border border-slate-700 p-3 rounded-lg flex justify-between items-center text-xs">
+                        <div>
+                            <span class="font-bold text-rose-400">${s.cowId}</span> - <span class="text-slate-300">${s.diagnosis}</span>
+                            <p class="text-[11px] text-slate-400 mt-0.5">Vet: ${s.vet}</p>
+                        </div>
+                        <span class="bg-rose-950 text-rose-300 border border-rose-800 px-2 py-0.5 rounded text-[10px]">${s.status}</span>
+                    </div>
+                `).join('');
+            }
+
+            // AI Dashboard List
+            const aiList = document.getElementById('dashboard-ai-list');
+            const aiCows = farmData.cows.filter(c => c.aiDate && (activeBranch === 'ALL' || c.branch === activeBranch));
+            
+            if(aiCows.length === 0) {
+                aiList.innerHTML = `<p class="text-xs text-slate-400 italic">No AI inseminations scheduled.</p>`;
+            } else {
+                aiList.innerHTML = aiCows.map(c => `
+                    <div class="bg-slate-900/60 border border-slate-700 p-3 rounded-lg flex justify-between items-center text-xs">
+                        <div>
+                            <span class="font-bold text-purple-400">${c.id}</span> (${c.breed})
+                            <p class="text-[11px] text-slate-400 mt-0.5">Straw: ${c.aiSperm || 'N/A'}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-semibold text-slate-200">Date: ${c.aiDate}</span>
+                            <p class="text-[10px] text-emerald-400">Calving due in ~9 Mos</p>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // 2. Cow Register Render
+        function renderCows() {
+            const body = document.getElementById('cowTableBody');
+            const filter = document.getElementById('cowSearchInput')?.value.toLowerCase() || '';
+            
+            const filtered = farmData.cows.filter(c => {
+                const matchBranch = activeBranch === 'ALL' || c.branch === activeBranch;
+                const matchSearch = c.id.toLowerCase().includes(filter) || c.breed.toLowerCase().includes(filter) || c.branch.toLowerCase().includes(filter);
+                return matchBranch && matchSearch;
+            });
+
+            body.innerHTML = filtered.map(c => `
+                <tr class="hover:bg-slate-700/30 transition">
+                    <td class="p-3.5 font-bold text-slate-100">${c.id}</td>
+                    <td class="p-3.5">${c.branch}</td>
+                    <td class="p-3.5">${c.breed}</td>
+                    <td class="p-3.5">${c.age} Yrs</td>
+                    <td class="p-3.5">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${c.status === 'Sick Bay' ? 'bg-rose-900 text-rose-300' : 'bg-emerald-900 text-emerald-300'}">
+                            ${c.status}
+                        </span>
+                    </td>
+                    <td class="p-3.5 font-mono text-xs text-purple-300">${c.aiSperm || 'Uninseminated'}</td>
+                    <td class="p-3.5">${c.aiDate || '-'}</td>
+                    <td class="p-3.5 text-right">
+                        <button onclick="deleteCow('${c.id}')" class="text-slate-400 hover:text-rose-400"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function filterCows() {
+            renderCows();
+        }
+
+        function saveCow(e) {
+            e.preventDefault();
+            const newCow = {
+                id: document.getElementById('cowTag').value,
+                branch: document.getElementById('cowBranch').value,
+                breed: document.getElementById('cowBreed').value,
+                age: parseFloat(document.getElementById('cowAge').value),
+                status: 'Healthy',
+                aiSperm: document.getElementById('cowAISperm').value,
+                aiDate: document.getElementById('cowAIDate').value
+            };
+            farmData.cows.push(newCow);
+            saveData();
+            closeModal('addCowModal');
+            document.getElementById('addCowForm').reset();
+        }
+
+        function deleteCow(id) {
+            if(confirm(`Delete Cow ${id}?`)) {
+                farmData.cows = farmData.cows.filter(c => c.id !== id);
+                saveData();
+            }
+        }
+
+        // 3. Milk Production Render
+        function renderMilk() {
+            const body = document.getElementById('milkTableBody');
+            const filtered = farmData.milkLogs.filter(m => activeBranch === 'ALL' || m.branch === activeBranch);
+
+            body.innerHTML = filtered.map(m => {
+                const total = (m.morning || 0) + (m.afternoon || 0) + (m.evening || 0);
+                return `
+                    <tr class="hover:bg-slate-700/30">
+                        <td class="p-3.5">${m.date}</td>
+                        <td class="p-3.5 font-bold text-white">${m.cowId}</td>
+                        <td class="p-3.5">${m.branch}</td>
+                        <td class="p-3.5">${m.morning} L</td>
+                        <td class="p-3.5">${m.afternoon} L</td>
+                        <td class="p-3.5">${m.evening} L</td>
+                        <td class="p-3.5 font-bold text-emerald-400">${total.toFixed(1)} L</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function saveMilkLog(e) {
+            e.preventDefault();
+            const cowId = document.getElementById('milkCowSelect').value;
+            const cow = farmData.cows.find(c => c.id === cowId);
+            const log = {
+                date: document.getElementById('milkDate').value,
+                cowId: cowId,
+                branch: cow ? cow.branch : 'Branch Alpha',
+                morning: parseFloat(document.getElementById('milkMorning').value) || 0,
+                afternoon: parseFloat(document.getElementById('milkAfternoon').value) || 0,
+                evening: parseFloat(document.getElementById('milkEvening').value) || 0
+            };
+            farmData.milkLogs.unshift(log);
+            saveData();
+            closeModal('addMilkModal');
+            document.getElementById('addMilkForm').reset();
+        }
+
+        // 4. Sick Bay Render
+        function renderSickBay() {
+            const container = document.getElementById('sickBayCardsContainer');
+            container.innerHTML = farmData.sickBay.map(s => `
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow space-y-3">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-xs text-rose-400 font-bold uppercase">Sick Bay Case</span>
+                            <h3 class="text-lg font-bold text-white">${s.cowId}</h3>
+                        </div>
+                        <span class="bg-rose-900/60 text-rose-300 border border-rose-700 px-2.5 py-1 rounded-full text-xs font-medium">${s.status}</span>
+                    </div>
+                    <div class="text-xs space-y-1 text-slate-300">
+                        <p><strong class="text-slate-400">Diagnosis:</strong> ${s.diagnosis}</p>
+                        <p><strong class="text-slate-400">Treatment:</strong> ${s.treatment}</p>
+                        <p><strong class="text-slate-400">Vet Doctor:</strong> ${s.vet}</p>
+                        <p><strong class="text-slate-400">Log Date:</strong> ${s.date}</p>
+                    </div>
+                    <div class="pt-2 border-t border-slate-700 flex justify-end">
+                        <button onclick="dischargeSickCow('${s.cowId}')" class="bg-emerald-700 hover:bg-emerald-600 text-white text-xs px-3 py-1.5 rounded transition">Mark Recovered</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function saveSickBay(e) {
+            e.preventDefault();
+            const cowId = document.getElementById('sickCowSelect').value;
+            const entry = {
+                cowId: cowId,
+                vet: document.getElementById('sickVet').value,
+                diagnosis: document.getElementById('sickDiagnosis').value,
+                treatment: document.getElementById('sickTreatment').value,
+                date: new Date().toISOString().split('T')[0],
+                status: 'Under Treatment'
+            };
+
+            // Update cow status
+            const cow = farmData.cows.find(c => c.id === cowId);
+            if(cow) cow.status = 'Sick Bay';
+
+            farmData.sickBay.unshift(entry);
+            saveData();
+            closeModal('addSickBayModal');
+            document.getElementById('addSickBayForm').reset();
+        }
+
+        function dischargeSickCow(cowId) {
+            const cow = farmData.cows.find(c => c.id === cowId);
+            if(cow) cow.status = 'Healthy';
+            farmData.sickBay = farmData.sickBay.filter(s => s.cowId !== cowId);
+            saveData();
+        }
+
+        // 5. Vaccines Render
+        function renderVaccines() {
+            const body = document.getElementById('vaccineTableBody');
+            body.innerHTML = farmData.vaccines.map((v, idx) => `
+                <tr class="hover:bg-slate-700/30">
+                    <td class="p-3.5 font-bold text-white">${v.disease}</td>
+                    <td class="p-3.5">${v.branch}</td>
+                    <td class="p-3.5">${v.date}</td>
+                    <td class="p-3.5">${v.vet}</td>
+                    <td class="p-3.5">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${v.status === 'Completed' ? 'bg-emerald-900 text-emerald-300' : 'bg-amber-900 text-amber-300'}">${v.status}</span>
+                    </td>
+                    <td class="p-3.5 text-right">
+                        ${v.status === 'Scheduled' ? `<button onclick="completeVaccine(${idx})" class="text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-slate-200">Mark Done</button>` : `<i class="fa-solid fa-check text-emerald-400"></i>`}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function saveVaccine(e) {
+            e.preventDefault();
+            farmData.vaccines.unshift({
+                disease: document.getElementById('vaccineDisease').value,
+                branch: document.getElementById('vaccineBranch').value,
+                date: document.getElementById('vaccineDate').value,
+                vet: document.getElementById('vaccineVet').value,
+                status: 'Scheduled'
+            });
+            saveData();
+            closeModal('addVaccineModal');
+        }
+
+        function completeVaccine(idx) {
+            farmData.vaccines[idx].status = 'Completed';
+            saveData();
+        }
+
+        // 6. Feeds & Calculator Render
+        function renderFeeds() {
+            const container = document.getElementById('feedInventoryContainer');
+            const filtered = farmData.feedStock.filter(f => activeBranch === 'ALL' || f.branch === activeBranch);
+
+            container.innerHTML = filtered.map(f => `
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 space-y-2">
+                    <span class="text-xs text-amber-400 font-semibold uppercase">${f.branch}</span>
+                    <h3 class="text-base font-bold text-white">${f.type}</h3>
+                    <div class="text-2xl font-black text-slate-100">${f.qty.toLocaleString()} <span class="text-xs text-slate-400 font-normal">${f.unit}</span></div>
+                    <div class="pt-2 border-t border-slate-700/60 flex justify-between items-center text-xs text-slate-400">
+                        <span>Stock Level: <strong class="text-emerald-400">${f.status}</strong></span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function runFeedCalculation() {
+            const branch = document.getElementById('calcBranchSelect')?.value || 'Branch Alpha';
+            let cowCount = 100; // baseline standard
+            if(branch === 'Branch Alpha') cowCount = 120;
+            if(branch === 'Branch Beta') cowCount = 115;
+            if(branch === 'Branch Gamma') cowCount = 105;
+
+            document.getElementById('calcSilageReq').innerText = (cowCount * 20).toLocaleString() + ' kg';
+            document.getElementById('calcConcReq').innerText = (cowCount * 6).toLocaleString() + ' kg';
+            document.getElementById('calcMineralReq').innerText = (cowCount * 0.5).toLocaleString() + ' kg';
+        }
+
+        function saveFeedStock(e) {
+            e.preventDefault();
+            const type = document.getElementById('feedType').value;
+            const branch = document.getElementById('feedBranch').value;
+            const qty = parseFloat(document.getElementById('feedQty').value);
+
+            const existing = farmData.feedStock.find(f => f.type === type && f.branch === branch);
+            if(existing) {
+                existing.qty += qty;
+            } else {
+                farmData.feedStock.push({ type, qty, unit: 'Kg', branch, status: 'Good' });
+            }
+            saveData();
+            closeModal('addFeedModal');
+        }
+
+        // 7. Machinery Render
+        function renderMachinery() {
+            const container = document.getElementById('machineryCardsContainer');
+            container.innerHTML = farmData.machines.map(m => `
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 space-y-2">
+                    <div class="w-8 h-8 rounded bg-slate-700 flex items-center justify-center text-slate-300">
+                        <i class="fa-solid fa-tractor text-sm"></i>
+                    </div>
+                    <h4 class="font-bold text-white text-sm">${m.name}</h4>
+                    <p class="text-xs text-slate-400">${m.type} • ${m.branch}</p>
+                </div>
+            `).join('');
+
+            const fuelBody = document.getElementById('fuelTableBody');
+            fuelBody.innerHTML = farmData.fuelLogs.map(fl => `
+                <tr class="hover:bg-slate-700/30">
+                    <td class="p-3.5">${fl.date}</td>
+                    <td class="p-3.5 font-bold text-white">${fl.machine}</td>
+                    <td class="p-3.5">${fl.branch}</td>
+                    <td class="p-3.5">${fl.type}</td>
+                    <td class="p-3.5">${fl.liters} L</td>
+                    <td class="p-3.5 font-bold text-emerald-400">$${fl.cost}</td>
+                    <td class="p-3.5">${fl.operator}</td>
+                </tr>
+            `).join('');
+        }
+
+        function saveMachine(e) {
+            e.preventDefault();
+            farmData.machines.push({
+                name: document.getElementById('machineName').value,
+                type: document.getElementById('machineType').value,
+                branch: document.getElementById('machineBranch').value
+            });
+            saveData();
+            closeModal('addMachineModal');
+        }
+
+        function saveFuel(e) {
+            e.preventDefault();
+            const mName = document.getElementById('fuelMachineSelect').value;
+            const mach = farmData.machines.find(m => m.name === mName);
+            farmData.fuelLogs.unshift({
+                date: new Date().toISOString().split('T')[0],
+                machine: mName,
+                branch: mach ? mach.branch : 'Branch Alpha',
+                type: 'Diesel',
+                liters: parseFloat(document.getElementById('fuelLiters').value),
+                cost: parseFloat(document.getElementById('fuelCost').value),
+                operator: document.getElementById('fuelOperator').value
+            });
+            saveData();
+            closeModal('addFuelModal');
+        }
+
+        // 8. Power Render
+        function renderPower() {
+            const body = document.getElementById('powerTableBody');
+            body.innerHTML = farmData.powerLogs.map(p => `
+                <tr class="hover:bg-slate-700/30">
+                    <td class="p-3.5">${p.date}</td>
+                    <td class="p-3.5 font-bold text-white">${p.branch}</td>
+                    <td class="p-3.5">${p.source}</td>
+                    <td class="p-3.5">${p.kwh} kWh</td>
+                    <td class="p-3.5 font-bold text-emerald-400">$${p.bill}</td>
+                    <td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] bg-emerald-900 text-emerald-300 font-semibold">${p.status}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function savePower(e) {
+            e.preventDefault();
+            farmData.powerLogs.unshift({
+                date: new Date().toISOString().split('T')[0],
+                branch: document.getElementById('powerBranch').value,
+                source: document.getElementById('powerSource').value,
+                kwh: parseFloat(document.getElementById('powerKwh').value),
+                bill: parseFloat(document.getElementById('powerBill').value),
+                status: 'Paid'
+            });
+            saveData();
+            closeModal('addPowerModal');
+        }
+
+        // 9 & 10. HR & Workers Render
+        function renderWorkers() {
+            const container = document.getElementById('workersCardContainer');
+            container.innerHTML = farmData.workers.map(w => `
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-emerald-900/60 text-emerald-400 flex items-center justify-center font-bold text-lg border border-emerald-700/50">
+                        ${w.name.charAt(0)}
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-white text-sm">${w.name}</h4>
+                        <p class="text-xs text-emerald-400 font-medium">${w.role}</p>
+                        <p class="text-[11px] text-slate-400 mt-1"><i class="fa-solid fa-code-branch"></i> ${w.branch} | ${w.phone}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function saveWorker(e) {
+            e.preventDefault();
+            farmData.workers.push({
+                name: document.getElementById('workerName').value,
+                role: document.getElementById('workerRole').value,
+                branch: document.getElementById('workerBranch').value,
+                phone: document.getElementById('workerPhone').value
+            });
+            saveData();
+            closeModal('addWorkerModal');
+        }
+
+        function renderCasuals() {
+            const body = document.getElementById('casualsTableBody');
+            body.innerHTML = farmData.casuals.map((c, i) => `
+                <tr class="hover:bg-slate-700/30">
+                    <td class="p-3.5">${c.date}</td>
+                    <td class="p-3.5 font-bold text-white">${c.name}</td>
+                    <td class="p-3.5">${c.branch}</td>
+                    <td class="p-3.5">${c.task}</td>
+                    <td class="p-3.5 font-semibold text-emerald-400">$${c.rate}</td>
+                    <td class="p-3.5">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${c.status === 'Paid' ? 'bg-emerald-900 text-emerald-300' : 'bg-amber-900 text-amber-300'}">${c.status}</span>
+                    </td>
+                    <td class="p-3.5 text-right">
+                        ${c.status === 'Pending' ? `<button onclick="payCasual(${i})" class="text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-slate-200">Mark Paid</button>` : `<i class="fa-solid fa-check text-emerald-400"></i>`}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function saveCasual(e) {
+            e.preventDefault();
+            farmData.casuals.unshift({
+                date: new Date().toISOString().split('T')[0],
+                name: document.getElementById('casualName').value,
+                branch: document.getElementById('casualBranch').value,
+                task: document.getElementById('casualTask').value,
+                rate: parseFloat(document.getElementById('casualRate').value),
+                status: 'Pending'
+            });
+            saveData();
+            closeModal('addCasualModal');
+        }
+
+        function payCasual(idx) {
+            farmData.casuals[idx].status = 'Paid';
+            saveData();
+        }
+
+        // --- CHART JS INITIALIZATION ---
+        function initCharts() {
+            // Milk Chart
+            const ctxMilk = document.getElementById('milkYieldChart')?.getContext('2d');
+            if(ctxMilk) {
+                if(milkChart) milkChart.destroy();
+                milkChart = new Chart(ctxMilk, {
+                    type: 'line',
+                    data: {
+                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        datasets: [{
+                            label: 'Total Daily Milk (Liters)',
+                            data: [6100, 6250, 6300, 6400, 6380, 6450, 6500],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+                            x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
+                        }
+                    }
+                });
+            }
+
+            // Herd Distribution Chart
+            const ctxHerd = document.getElementById('herdDistributionChart')?.getContext('2d');
+            if(ctxHerd) {
+                if(herdChart) herdChart.destroy();
+                herdChart = new Chart(ctxHerd, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Branch Alpha', 'Branch Beta', 'Branch Gamma'],
+                        datasets: [{
+                            data: [120, 115, 105],
+                            backgroundColor: ['#10b981', '#3b82f6', '#f59e0b'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 11 } } }
+                        }
+                    }
+                });
+            }
+        }
+
+        // --- INITIALIZATION ON WINDOW LOAD ---
+        window.onload = function() {
+            // Mobile menu listener
+            document.getElementById('sidebarToggleBtn').addEventListener('click', () => {
+                document.getElementById('sidebar').classList.toggle('-translate-x-full');
+            });
+
+            // Set default date input fields to today
+            const todayStr = new Date().toISOString().split('T')[0];
+            const dateInputs = ['milkDate', 'cowAIDate', 'vaccineDate'];
+            dateInputs.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.value = todayStr;
+            });
+
+            refreshUI();
+            initCharts();
+        };
+    </script>
+</body>
+</html>
